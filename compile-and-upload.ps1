@@ -1,0 +1,1 @@
+& "$env:USERPROFILE\.platformio\penv\Scripts\platformio.exe" run -e pico -t upload
