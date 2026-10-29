@@ -1,4 +1,5 @@
 /*
+ * Mixed from Alex Chu's Power Sequence
  * Copyright (c) 2026 Shenzhen Sudo Electronics Technology Limited
  * www.sudotronic.com
  * License: MIT
@@ -35,10 +36,11 @@ static void initialize_fixed_power_pins(void) {
         gpio_init(pin);
         gpio_set_dir(pin, GPIO_OUT);
         gpio_put(pin, 0);
-    }
+    }    
 }
 
 static void run_validated_power_on_sequence(void) {
+
 
     gpio_put(UXE_1V1_EN, 1);
     sleep_ms(1);
@@ -57,7 +59,35 @@ static void run_validated_power_on_sequence(void) {
     gpio_put(UXE_RESET_PIN, 1);
     sleep_ms(1000);
 }
-
+void uxe_reinit(void){
+    const uint pins[] = {
+        UXE_RESET_PIN, UXE_3V3_EN, UXE_1V1_EN,
+        DISP_3V3_EN, DISP_BIAS_EN,
+        DISP_1V8_EN, UXE_INIT_PIN
+    };
+    for (size_t i = 0; i < sizeof(pins) / sizeof(pins[0]); ++i) {
+        const uint pin = pins[i];
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_OUT);
+        gpio_put(pin, 0);
+    }    
+    sleep_ms(20000);
+    for (size_t i = 0; i < sizeof(pins) / sizeof(pins[0]); ++i) {
+        const uint pin = pins[i];
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_OUT);
+        gpio_put(pin, 1);
+    }    
+    sleep_ms(20000);
+    for (size_t i = 0; i < sizeof(pins) / sizeof(pins[0]); ++i) {
+        const uint pin = pins[i];
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_OUT);
+        gpio_put(pin, 0);
+    }        
+    user_controls_init_before_power_on();
+    run_validated_power_on_sequence();    
+}
 void uxe_initialize(void) {
 
     initialize_fixed_power_pins();

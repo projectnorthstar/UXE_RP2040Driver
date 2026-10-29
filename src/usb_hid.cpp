@@ -1,8 +1,10 @@
+// A HID USB Declaration and comm setup, allowing Esky's control panel/other software to communicate with it
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h>
+#include <stdint.h>
 #include <string.h>
 extern "C" {
-uint16_t uxe_get_adc(void), uxe_get_mv(void), uxe_get_stream_interval(void);
+uint16_t uxe_get_adc(void), uxe_get_mv(void), uxe_get_stream_interval(void), uxe_temp(void);
 uint8_t uxe_get_brightness(void), uxe_get_refresh(void), uxe_get_fan_mode(void), uxe_get_fan_on(void);
 void uxe_set_brightness(uint8_t), uxe_set_refresh(uint8_t), uxe_set_fan_mode(uint8_t), uxe_set_stream_interval(uint16_t);
 }
@@ -31,11 +33,9 @@ static void set_report(uint8_t report_id, hid_report_type_t report_type, uint8_t
 static uint16_t get_report(uint8_t, hid_report_type_t, uint8_t*, uint16_t){return 0;}
 void uxe_hid_begin()
 {
-    // USB device identification
     TinyUSBDevice.setManufacturerDescriptor("NorthStar Org");
     TinyUSBDevice.setProductDescriptor("NorthStar UXE Driver");
 
-    // Register HID descriptor and callbacks
     hid.setPollInterval(2);
 
     hid.setReportDescriptor(
@@ -47,8 +47,6 @@ void uxe_hid_begin()
         get_report,
         set_report
     );
-
-    // Register HID interface with TinyUSB
     hid.begin();
 }
 void uxe_debug_poll(){
@@ -62,7 +60,7 @@ void uxe_debug_poll(){
     Serial.println(hid.ready() ? "YES" : "NO");
 }
 static void status_fields(uint8_t* b) {
-  uint16_t adc=uxe_get_adc(), mv=uxe_get_mv(), interval=uxe_get_stream_interval();
+  uint16_t adc=uxe_get_adc(), mv=uxe_temp(), interval=uxe_get_stream_interval();
   b[4]=adc&255; b[5]=adc>>8; b[6]=mv&255; b[7]=mv>>8;
   b[8]=uxe_get_brightness(); b[9]=uxe_get_fan_mode();
   b[10]=uxe_get_fan_on(); b[11]=uxe_get_refresh();
